@@ -7,34 +7,17 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
     body { background-color: #f0f4f8; color: #1e293b; padding: 20px; }
-    .container { max-width: 1000px; margin: 0 auto; }
+    .container { max-width: 600px; margin: 0 auto; transition: max-width 0.4s ease; }
+    .container.wide { max-width: 900px; }
+
     .header { text-align: center; margin-bottom: 28px; }
     .badge { display: inline-block; background: #dbeafe; color: #1d4ed8; font-size: 0.8rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-bottom: 8px; }
     .header h1 { font-size: 2rem; color: #0f172a; }
     .header p { color: #475569; margin-top: 4px; }
     
-    .calculator-grid {
-      display: flex;
-      justify-content: center;
-      transition: all 0.4s ease;
-    }
-    
-    .calculator-grid.two-columns {
-      display: grid;
-      grid-template-columns: 1fr 1.2fr;
-      gap: 24px;
-    }
-
-    @media (max-width: 768px) {
-      .calculator-grid.two-columns {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .card { background: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06); width: 100%; max-width: 500px; }
-    .calculator-grid.two-columns .card { max-width: none; }
-
+    .card { background: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06); width: 100%; }
     .card h2 { font-size: 1.2rem; margin-bottom: 18px; color: #0f172a; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
+    
     .form-group { margin-bottom: 16px; }
     .form-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; color: #334155; }
     .form-group input, .form-group select { width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 1rem; }
@@ -58,29 +41,37 @@
       box-shadow: 0 6px 15px rgba(234, 88, 12, 0.3);
     }
 
-    /* Resultados ocultos al inicio */
-    .results-section {
-      display: none;
-      opacity: 0;
-      transform: translateY(20px);
-      transition: opacity 0.5s ease, transform 0.5s ease;
+    .btn-secondary {
+      width: 100%;
+      padding: 10px;
+      background: #e2e8f0;
+      color: #334155;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 16px;
+      transition: background 0.15s;
     }
-    .results-section.visible {
-      display: block;
-      opacity: 1;
-      transform: translateY(0);
-    }
+    .btn-secondary:hover { background: #cbd5e1; }
+
+    /* Control de vistas (Pantallas separadas) */
+    .view { display: none; }
+    .view.active { display: block; }
 
     .highlight-box { background: linear-gradient(135deg, #fff7ed, #ffedd5); border: 1px solid #fed7aa; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 18px; }
     .highlight-box .label { font-size: 0.85rem; text-transform: uppercase; font-weight: 700; color: #c2410c; }
     .highlight-box .big-value { font-size: 1.6rem; font-weight: 800; color: #9a3412; margin: 4px 0; }
     .highlight-box .sub-label { font-size: 0.85rem; color: #7c2d12; }
+    
     .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
     .metric-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; }
     .metric-card.green { background: #f0fdf4; border-color: #bbf7d0; }
     .m-title { display: block; font-size: 0.78rem; color: #64748b; font-weight: 600; }
     .m-value { display: block; font-size: 1.15rem; font-weight: 800; color: #0f172a; margin-top: 4px; }
     .metric-card.green .m-value { color: #15803d; }
+    
     .chart-box { margin-bottom: 16px; }
     .chart-box h3 { font-size: 0.95rem; margin-bottom: 10px; color: #334155; }
     .bar-group { margin-bottom: 10px; }
@@ -93,16 +84,16 @@
   </style>
 </head>
 <body>
-<div class="container">
+<div id="mainContainer" class="container">
   <header class="header">
     <div class="badge">Ingeniería en Energía • Prototipo Web</div>
     <h1>☀️ EcoCalc Solar</h1>
     <p>Calculadora inteligente de dimensionamiento y ahorro para calentadores solares</p>
   </header>
   
-  <main id="calculatorGrid" class="calculator-grid">
-    <!-- Panel de Datos de Entrada -->
-    <section class="card input-section">
+  <main>
+    <!-- VISTA 1: Formulario de Entrada -->
+    <section id="viewForm" class="card view active">
       <h2>1. Datos de tu hogar</h2>
       <div class="form-group">
         <label for="personas">Número de personas:</label>
@@ -131,8 +122,9 @@
       <button id="btnCalcular" class="btn-primary">Calcular Ahorro y Equipo</button>
     </section>
 
-    <!-- Panel de Resultados (Oculto al inicio) -->
-    <section id="resultsSection" class="card results-section">
+    <!-- VISTA 2: Resultados y Dimensionamiento (Pantalla independiente) -->
+    <section id="viewResults" class="card view">
+      <button id="btnVolver" class="btn-secondary">← Modificar Datos</button>
       <h2>2. Resultados y Dimensionamiento</h2>
       <div class="highlight-box">
         <span class="label">Equipo Recomendado</span>
@@ -236,14 +228,22 @@
     document.getElementById('resCo2').textContent = `${co2Evitado} kg`;
     document.getElementById('resArboles').textContent = `${arbolesEquivalentes} árboles`;
 
-    // Mostrar sección de resultados con animación
-    const grid = document.getElementById('calculatorGrid');
-    const results = document.getElementById('resultsSection');
-    grid.classList.add('two-columns');
-    results.classList.add('visible');
+    // Cambiar de pantalla (Ocultar formulario, mostrar resultados)
+    document.getElementById('viewForm').classList.remove('active');
+    document.getElementById('viewResults').classList.add('active');
+    document.getElementById('mainContainer').classList.add('wide');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function volverAlFormulario() {
+    document.getElementById('viewResults').classList.remove('active');
+    document.getElementById('viewForm').classList.add('active');
+    document.getElementById('mainContainer').classList.remove('wide');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   document.getElementById('btnCalcular').addEventListener('click', ejecutarCalculo);
+  document.getElementById('btnVolver').addEventListener('click', volverAlFormulario);
 </script>
 </body>
 </html>
