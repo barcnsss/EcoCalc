@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoCalc Solar - Calculadora de Calentadores Solares</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    body { background-color: #f0f4f8; color: #1e293b; padding: 20px; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 28px; }
+    .badge { display: inline-block; background: #dbeafe; color: #1d4ed8; font-size: 0.8rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-bottom: 8px; }
+    .header h1 { font-size: 2rem; color: #0f172a; }
+    .header p { color: #475569; margin-top: 4px; }
+    .calculator-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 24px; }
+    @media (max-width: 768px) { .calculator-grid { grid-template-columns: 1fr; } }
+    .card { background: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06); }
+    .card h2 { font-size: 1.2rem; margin-bottom: 18px; color: #0f172a; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; color: #334155; }
+    .form-group input, .form-group select { width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 1rem; }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: #f97316; }
+    .btn-primary { width: 100%; padding: 12px; background: linear-gradient(135deg, #f97316, #ea580c); color: white; border: none; border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 8px; }
+    .btn-primary:hover { opacity: 0.95; }
+    .highlight-box { background: linear-gradient(135deg, #fff7ed, #ffedd5); border: 1px solid #fed7aa; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 18px; }
+    .highlight-box .label { font-size: 0.85rem; text-transform: uppercase; font-weight: 700; color: #c2410c; }
+    .highlight-box .big-value { font-size: 1.6rem; font-weight: 800; color: #9a3412; margin: 4px 0; }
+    .highlight-box .sub-label { font-size: 0.85rem; color: #7c2d12; }
+    .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .metric-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; }
+    .metric-card.green { background: #f0fdf4; border-color: #bbf7d0; }
+    .m-title { display: block; font-size: 0.78rem; color: #64748b; font-weight: 600; }
+    .m-value { display: block; font-size: 1.15rem; font-weight: 800; color: #0f172a; margin-top: 4px; }
+    .metric-card.green .m-value { color: #15803d; }
+    .chart-box { margin-bottom: 16px; }
+    .chart-box h3 { font-size: 0.95rem; margin-bottom: 10px; color: #334155; }
+    .bar-group { margin-bottom: 10px; }
+    .bar-label { display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px; }
+    .bar-track { background: #e2e8f0; height: 12px; border-radius: 6px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 6px; transition: width 0.4s ease; }
+    .bar-fill.red { background: #ef4444; }
+    .bar-fill.green { background: #22c55e; }
+    .eco-box { background: #ecfdf5; border-left: 4px solid #10b981; padding: 12px; border-radius: 8px; font-size: 0.88rem; color: #065f46; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header class="header">
+    <div class="badge">Ingeniería en Energía • Prototipo Web</div>
+    <h1>☀️ EcoCalc Solar</h1>
+    <p>Calculadora inteligente de dimensionamiento y ahorro para calentadores solares</p>
+  </header>
+  <main class="calculator-grid">
+    <section class="card input-section">
+      <h2>1. Datos de tu hogar</h2>
+      <div class="form-group">
+        <label for="personas">Número de personas:</label>
+        <input type="number" id="personas" min="1" max="15" value="4">
+      </div>
+      <div class="form-group">
+        <label for="combustible">Sistema actual:</label>
+        <select id="combustible">
+          <option value="gas_lp">Gas LP (Cilindro / Estacionario)</option>
+          <option value="gas_nat">Gas Natural</option>
+          <option value="electrico">Boiler Eléctrico</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="gasto">Gasto mensual aproximado ($ MXN):</label>
+        <input type="number" id="gasto" min="100" step="50" value="850">
+      </div>
+      <div class="form-group">
+        <label for="uso">Hábito de uso de agua caliente:</label>
+        <select id="uso">
+          <option value="38">Moderado (38 L/persona)</option>
+          <option value="45" selected>Estándar (45 L/persona)</option>
+          <option value="55">Alto (55 L/persona)</option>
+        </select>
+      </div>
+      <button id="btnCalcular" class="btn-primary">Calcular Ahorro y Equipo</button>
+    </section>
+    <section class="card results-section">
+      <h2>2. Resultados y Dimensionamiento</h2>
+      <div class="highlight-box">
+        <span class="label">Equipo Recomendado</span>
+        <div class="big-value" id="resEquipo">180 Litros (18 Tubos)</div>
+        <span class="sub-label" id="resLitros">Demanda diaria estimada: 180 L/día</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="m-title">Costo Estimado Instalado</span>
+          <span class="m-value" id="resCosto">$8,900 MXN</span>
+        </div>
+        <div class="metric-card green">
+          <span class="m-title">Ahorro Anual (70% prom.)</span>
+          <span class="m-value" id="resAhorroAnual">$7,140 MXN</span>
+        </div>
+        <div class="metric-card">
+          <span class="m-title">Retorno de Inversión</span>
+          <span class="m-value" id="resPayback">1 año, 3 meses</span>
+        </div>
+        <div class="metric-card green">
+          <span class="m-title">Ahorro Neto a 5 Años</span>
+          <span class="m-value" id="resAhorro5">$26,800 MXN</span>
+        </div>
+      </div>
+      <div class="chart-box">
+        <h3>Comparativa de Gasto Anual (MXN)</h3>
+        <div class="bar-group">
+          <div class="bar-label"><span>Sin Calentador Solar</span><span id="txtGastoActual">$10,200</span></div>
+          <div class="bar-track"><div class="bar-fill red" style="width: 100%;"></div></div>
+        </div>
+        <div class="bar-group">
+          <div class="bar-label"><span>Con Calentador Solar</span><span id="txtGastoNuevo">$3,060</span></div>
+          <div class="bar-track"><div class="bar-fill green" id="barNuevo" style="width: 30%;"></div></div>
+        </div>
+      </div>
+      <div class="eco-box">
+        <span>🌱 Impacto Ambiental: Evitarás aprox. <strong id="resCo2">420 kg</strong> de CO₂ al año (equivale a plantar <strong id="resArboles">19 árboles</strong>).</span>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+  const catalogoEquipos = [
+    { litros: 100, tubos: 10, costo: 5800 },
+    { litros: 120, tubos: 12, costo: 6500 },
+    { litros: 150, tubos: 15, costo: 7600 },
+    { litros: 180, tubos: 18, costo: 8900 },
+    { litros: 240, tubos: 24, costo: 11200 },
+    { litros: 300, tubos: 30, costo: 13800 },
+    { litros: 450, tubos: 45, costo: 19500 }
+  ];
+  function formatoMoneda(c) { return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(c); }
+  function calcularSistema() {
+    const personas = parseInt(document.getElementById('personas').value) || 1;
+    const combustible = document.getElementById('combustible').value;
+    const gastoMensual = parseFloat(document.getElementById('gasto').value) || 0;
+    const litrosPersona = parseInt(document.getElementById('uso').value) || 45;
+    const demandaDiaria = personas * litrosPersona;
+    let equipoSeleccionado = catalogoEquipos[catalogoEquipos.length - 1];
+    for (let i = 0; i < catalogoEquipos.length; i++) {
+      if (catalogoEquipos[i].litros >= demandaDiaria) { equipoSeleccionado = catalogoEquipos[i]; break; }
+    }
+    let porcentajeAhorro = 0.70, factorCo2 = 0.05;
+    if (combustible === 'electrico') { porcentajeAhorro = 0.75; factorCo2 = 0.08; }
+    else if (combustible === 'gas_nat') { porcentajeAhorro = 0.70; factorCo2 = 0.045; }
+    const gastoAnualActual = gastoMensual * 12;
+    const ahorroAnual = gastoAnualActual * porcentajeAhorro;
+    const gastoAnualNuevo = gastoAnualActual - ahorroAnual;
+    const ahorroMensual = ahorroAnual / 12;
+    const mesesPayback = ahorroMensual > 0 ? Math.ceil(equipoSeleccionado.costo / ahorroMensual) : 0;
+    const anios = Math.floor(mesesPayback / 12), meses = mesesPayback % 12;
+    let textoPayback = "";
+    if (anios > 0) textoPayback += `${anios} año${anios > 1 ? 's' : ''}`;
+    if (meses > 0) textoPayback += `${anios > 0 ? ', ' : ''}${meses} mes${meses > 1 ? 'es' : ''}`;
+    const ahorro5Anios = (ahorroAnual * 5) - equipoSeleccionado.costo;
+    const co2Evitado = Math.round(ahorroAnual * factorCo2);
+    const arbolesEquivalentes = Math.max(1, Math.round(co2Evitado / 22));
+    document.getElementById('resEquipo').textContent = `${equipoSeleccionado.litros} Litros (${equipoSeleccionado.tubos} Tubos)`;
+    document.getElementById('resLitros').textContent = `Demanda diaria estimada: ${demandaDiaria} L/día`;
+    document.getElementById('resCosto').textContent = `${formatoMoneda(equipoSeleccionado.costo)} MXN`;
+    document.getElementById('resAhorroAnual').textContent = `${formatoMoneda(ahorroAnual)} MXN`;
+    document.getElementById('resPayback').textContent = textoPayback || "N/A";
+    document.getElementById('resAhorro5').textContent = `${formatoMoneda(ahorro5Anios)} MXN`;
+    document.getElementById('txtGastoActual').textContent = formatoMoneda(gastoAnualActual);
+    document.getElementById('txtGastoNuevo').textContent = formatoMoneda(gastoAnualNuevo);
+    document.getElementById('barNuevo').style.width = `${Math.round((1 - porcentajeAhorro) * 100)}%`;
+    document.getElementById('resCo2').textContent = `${co2Evitado} kg`;
+    document.getElementById('resArboles').textContent = `${arbolesEquivalentes} árboles`;
+  }
+  document.getElementById('btnCalcular').addEventListener('click', calcularSistema);
+  document.querySelectorAll('input, select').forEach(el => el.addEventListener('change', calcularSistema));
+  calcularSistema();
+</script>
+</body>
+</html>
