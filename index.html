@@ -12,15 +12,65 @@
     .badge { display: inline-block; background: #dbeafe; color: #1d4ed8; font-size: 0.8rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-bottom: 8px; }
     .header h1 { font-size: 2rem; color: #0f172a; }
     .header p { color: #475569; margin-top: 4px; }
-    .calculator-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 24px; }
-    @media (max-width: 768px) { .calculator-grid { grid-template-columns: 1fr; } }
-    .card { background: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06); }
+    
+    .calculator-grid {
+      display: flex;
+      justify-content: center;
+      transition: all 0.4s ease;
+    }
+    
+    .calculator-grid.two-columns {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .calculator-grid.two-columns {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card { background: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06); width: 100%; max-width: 500px; }
+    .calculator-grid.two-columns .card { max-width: none; }
+
     .card h2 { font-size: 1.2rem; margin-bottom: 18px; color: #0f172a; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
     .form-group { margin-bottom: 16px; }
     .form-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; color: #334155; }
-    .form-group input, .form-group select { width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 1rem; transition: border-color 0.2s; }
+    .form-group input, .form-group select { width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 1rem; }
     .form-group input:focus, .form-group select:focus { outline: none; border-color: #f97316; }
-    .live-note { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 10px 12px; font-size: 0.82rem; color: #64748b; text-align: center; margin-top: 20px; }
+
+    .btn-primary {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 15px rgba(234, 88, 12, 0.3);
+    }
+
+    /* Resultados ocultos al inicio */
+    .results-section {
+      display: none;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .results-section.visible {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
     .highlight-box { background: linear-gradient(135deg, #fff7ed, #ffedd5); border: 1px solid #fed7aa; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 18px; }
     .highlight-box .label { font-size: 0.85rem; text-transform: uppercase; font-weight: 700; color: #c2410c; }
     .highlight-box .big-value { font-size: 1.6rem; font-weight: 800; color: #9a3412; margin: 4px 0; }
@@ -49,7 +99,9 @@
     <h1>☀️ EcoCalc Solar</h1>
     <p>Calculadora inteligente de dimensionamiento y ahorro para calentadores solares</p>
   </header>
-  <main class="calculator-grid">
+  
+  <main id="calculatorGrid" class="calculator-grid">
+    <!-- Panel de Datos de Entrada -->
     <section class="card input-section">
       <h2>1. Datos de tu hogar</h2>
       <div class="form-group">
@@ -66,7 +118,7 @@
       </div>
       <div class="form-group">
         <label for="gasto">Gasto mensual aproximado ($ MXN):</label>
-        <input type="number" id="gasto" min="100" step="50" value="850">
+        <input type="number" id="gasto" min="100" step="50" value="500">
       </div>
       <div class="form-group">
         <label for="uso">Hábito de uso de agua caliente:</label>
@@ -76,12 +128,11 @@
           <option value="55">Alto (55 L/persona)</option>
         </select>
       </div>
-      <div class="live-note">
-        ⚡ Los resultados se actualizan automáticamente al modificar tus datos.
-      </div>
+      <button id="btnCalcular" class="btn-primary">Calcular Ahorro y Equipo</button>
     </section>
 
-    <section class="card results-section">
+    <!-- Panel de Resultados (Oculto al inicio) -->
+    <section id="resultsSection" class="card results-section">
       <h2>2. Resultados y Dimensionamiento</h2>
       <div class="highlight-box">
         <span class="label">Equipo Recomendado</span>
@@ -95,30 +146,30 @@
         </div>
         <div class="metric-card green">
           <span class="m-title">Ahorro Anual (70% prom.)</span>
-          <span class="m-value" id="resAhorroAnual">$7,140 MXN</span>
+          <span class="m-value" id="resAhorroAnual">$4,200 MXN</span>
         </div>
         <div class="metric-card">
           <span class="m-title">Retorno de Inversión</span>
-          <span class="m-value" id="resPayback">1 año, 3 meses</span>
+          <span class="m-value" id="resPayback">2 años, 2 meses</span>
         </div>
         <div class="metric-card green">
           <span class="m-title">Ahorro Neto a 5 Años</span>
-          <span class="m-value" id="resAhorro5">$26,800 MXN</span>
+          <span class="m-value" id="resAhorro5">$12,100 MXN</span>
         </div>
       </div>
       <div class="chart-box">
         <h3>Comparativa de Gasto Anual (MXN)</h3>
         <div class="bar-group">
-          <div class="bar-label"><span>Sin Calentador Solar</span><span id="txtGastoActual">$10,200</span></div>
+          <div class="bar-label"><span>Sin Calentador Solar</span><span id="txtGastoActual">$6,000</span></div>
           <div class="bar-track"><div class="bar-fill red" style="width: 100%;"></div></div>
         </div>
         <div class="bar-group">
-          <div class="bar-label"><span>Con Calentador Solar</span><span id="txtGastoNuevo">$3,060</span></div>
+          <div class="bar-label"><span>Con Calentador Solar</span><span id="txtGastoNuevo">$1,800</span></div>
           <div class="bar-track"><div class="bar-fill green" id="barNuevo" style="width: 30%;"></div></div>
         </div>
       </div>
       <div class="eco-box">
-        <span>🌱 Impacto Ambiental: Evitarás aprox. <strong id="resCo2">420 kg</strong> de CO₂ al año (equivale a plantar <strong id="resArboles">19 árboles</strong>).</span>
+        <span>🌱 Impacto Ambiental: Evitarás aprox. <strong id="resCo2">210 kg</strong> de CO₂ al año (equivale a plantar <strong id="resArboles">10 árboles</strong>).</span>
       </div>
     </section>
   </main>
@@ -139,7 +190,7 @@
     return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(c);
   }
 
-  function calcularSistema() {
+  function ejecutarCalculo() {
     const personas = parseInt(document.getElementById('personas').value) || 1;
     const combustible = document.getElementById('combustible').value;
     const gastoMensual = parseFloat(document.getElementById('gasto').value) || 0;
@@ -184,14 +235,15 @@
     document.getElementById('barNuevo').style.width = `${Math.round((1 - porcentajeAhorro) * 100)}%`;
     document.getElementById('resCo2').textContent = `${co2Evitado} kg`;
     document.getElementById('resArboles').textContent = `${arbolesEquivalentes} árboles`;
+
+    // Mostrar sección de resultados con animación
+    const grid = document.getElementById('calculatorGrid');
+    const results = document.getElementById('resultsSection');
+    grid.classList.add('two-columns');
+    results.classList.add('visible');
   }
 
-  document.querySelectorAll('input, select').forEach(el => {
-    el.addEventListener('input', calcularSistema);
-    el.addEventListener('change', calcularSistema);
-  });
-
-  calcularSistema();
+  document.getElementById('btnCalcular').addEventListener('click', ejecutarCalculo);
 </script>
 </body>
 </html>
